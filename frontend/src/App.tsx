@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, Check } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { AlertCircle, Check } from "lucide-react";
+
+//constants
+const BACKEND_URL = "https://bms-6mc3.onrender.com/";
 
 interface Seat {
   id: string;
-  status: 'available' | 'booked' | 'selected';
+  status: "available" | "booked" | "selected";
 }
 
 interface BackendSeat {
@@ -17,16 +20,18 @@ function App() {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [bookingStatus, setBookingStatus] = useState<{
     message: string;
-    type: 'success' | 'error' | null;
-  }>({ message: '', type: null });
+    type: "success" | "error" | null;
+  }>({ message: "", type: null });
 
   useEffect(() => {
     const initializeSeats = async () => {
       try {
         // Fetch booked seats from backend
-        const response = await fetch('http://localhost:3000/seats');
+        const response = await fetch(`${BACKEND_URL}seats`);
         const data = await response.json();
-        const bookedSeats = new Set(data.seats.map((seat: BackendSeat) => seat.seat));
+        const bookedSeats = new Set(
+          data.seats.map((seat: BackendSeat) => seat.seat),
+        );
 
         // Initialize seats (8 rows x 10 seats)
         const initialSeats: Seat[] = [];
@@ -35,16 +40,16 @@ function App() {
             const seatId = `${String.fromCharCode(65 + row)}${col + 1}`;
             initialSeats.push({
               id: seatId,
-              status: bookedSeats.has(seatId) ? 'booked' : 'available'
+              status: bookedSeats.has(seatId) ? "booked" : "available",
             });
           }
         }
         setSeats(initialSeats);
       } catch (error) {
-        console.error('Failed to fetch seat data:', error);
+        console.error("Failed to fetch seat data:", error);
         setBookingStatus({
-          message: 'Failed to load seat data. Please refresh the page.',
-          type: 'error',
+          message: "Failed to load seat data. Please refresh the page.",
+          type: "error",
         });
       }
     };
@@ -53,12 +58,12 @@ function App() {
   }, []);
 
   const handleSeatClick = (seatId: string) => {
-    const seat = seats.find(s => s.id === seatId);
-    if (seat?.status === 'booked') return;
+    const seat = seats.find((s) => s.id === seatId);
+    if (seat?.status === "booked") return;
 
-    setSelectedSeats(prev => {
+    setSelectedSeats((prev) => {
       if (prev.includes(seatId)) {
-        return prev.filter(id => id !== seatId);
+        return prev.filter((id) => id !== seatId);
       }
       return [...prev, seatId];
     });
@@ -66,37 +71,37 @@ function App() {
 
   const handleBooking = async () => {
     try {
-      const response = await fetch('http://localhost:3000/book', {
-        method: 'POST',
+      const response = await fetch(`${BACKEND_URL}book`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          status: 'booked',
+          status: "booked",
           seats: selectedSeats,
         }),
       });
 
       if (response.ok) {
-        setSeats(prev =>
-          prev.map(seat =>
+        setSeats((prev) =>
+          prev.map((seat) =>
             selectedSeats.includes(seat.id)
-              ? { ...seat, status: 'booked' }
-              : seat
-          )
+              ? { ...seat, status: "booked" }
+              : seat,
+          ),
         );
         setSelectedSeats([]);
         setBookingStatus({
-          message: 'Seats booked successfully!',
-          type: 'success',
+          message: "Seats booked successfully!",
+          type: "success",
         });
       } else {
-        throw new Error('Booking failed');
+        throw new Error("Booking failed");
       }
     } catch (error) {
       setBookingStatus({
-        message: 'Failed to book seats. Please try again.',
-        type: 'error',
+        message: "Failed to book seats. Please try again.",
+        type: "error",
       });
     }
   };
@@ -104,8 +109,10 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Movie Theater Booking</h1>
-        
+        <h1 className="text-3xl font-bold text-center mb-8">
+          Movie Theater Booking
+        </h1>
+
         {/* Screen */}
         <div className="relative mb-12">
           <div className="w-3/4 h-4 bg-gray-300 mx-auto rounded-lg transform perspective-1000 rotateX-45"></div>
@@ -121,13 +128,14 @@ function App() {
                 onClick={() => handleSeatClick(seat.id)}
                 className={`
                   w-8 h-8 rounded-t-lg text-xs font-medium transition-colors
-                  ${seat.status === 'booked' 
-                    ? 'bg-gray-600 cursor-not-allowed' 
+                  ${seat.status === "booked"
+                    ? "bg-gray-600 cursor-not-allowed"
                     : selectedSeats.includes(seat.id)
-                    ? 'bg-green-500 hover:bg-green-600'
-                    : 'bg-blue-500 hover:bg-blue-600'}
+                      ? "bg-green-500 hover:bg-green-600"
+                      : "bg-blue-500 hover:bg-blue-600"
+                  }
                 `}
-                disabled={seat.status === 'booked'}
+                disabled={seat.status === "booked"}
               >
                 {seat.id}
               </button>
@@ -153,9 +161,11 @@ function App() {
 
         {/* Booking Status */}
         {bookingStatus.type && (
-          <div className={`flex items-center justify-center gap-2 p-4 rounded-lg mb-4 
-            ${bookingStatus.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
-            {bookingStatus.type === 'success' ? (
+          <div
+            className={`flex items-center justify-center gap-2 p-4 rounded-lg mb-4 
+            ${bookingStatus.type === "success" ? "bg-green-600" : "bg-red-600"}`}
+          >
+            {bookingStatus.type === "success" ? (
               <Check size={20} />
             ) : (
               <AlertCircle size={20} />
@@ -172,11 +182,13 @@ function App() {
             className={`
               px-6 py-3 rounded-lg font-semibold transition-colors
               ${selectedSeats.length === 0
-                ? 'bg-gray-600 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600'}
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-600"
+              }
             `}
           >
-            Book {selectedSeats.length} {selectedSeats.length === 1 ? 'Seat' : 'Seats'}
+            Book {selectedSeats.length}{" "}
+            {selectedSeats.length === 1 ? "Seat" : "Seats"}
           </button>
         </div>
       </div>
